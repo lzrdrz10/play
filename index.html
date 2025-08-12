@@ -2,29 +2,31 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Encriptador de Enlaces</title>
+  <title>Encriptador de Enlaces - JW Player</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    input, textarea { width: 100%; margin: 10px 0; padding: 10px; }
-    button { padding: 10px 20px; }
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    input, textarea { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
-  <h2>🎬 Encriptador de Enlaces MP4 / M3U8</h2>
-  <label for="videoUrl">Enlace del video (MP4 o M3U8):</label>
+  <h2>🔐 Encriptador de Enlaces MP4 / M3U8</h2>
+  <label for="videoUrl">Enlace del video:</label>
   <input type="text" id="videoUrl" placeholder="https://example.com/video.m3u8" />
 
-  <button onclick="generarEnlace()">🔐 Generar Enlace</button>
+  <button onclick="generarEnlace()">Generar Enlace</button>
 
-  <h3>🔗 Enlace generado:</h3>
+  <h3>📎 Enlace generado:</h3>
   <textarea id="linkGenerado" rows="3" readonly></textarea>
 
   <script>
     function generarEnlace() {
       const url = document.getElementById('videoUrl').value.trim();
-      if (!url) return alert("Por favor ingresa una URL de video.");
-      const encriptado = btoa(url); // Base64
-      const enlace = `${location.origin}/desencriptador.html?id=${encriptado}`;
+      if (!url) return alert("Por favor ingresa un enlace de video válido.");
+      const base64 = btoa(url); // Encriptación Base64
+
+      // URL fija del desencriptador desde GitHub Pages
+      const enlace = `https://lzrdrz10.github.io/play/desencriptador.html?id=${base64}`;
       document.getElementById('linkGenerado').value = enlace;
     }
   </script>
