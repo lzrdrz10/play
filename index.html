@@ -1,34 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Encriptador de Enlaces - JW Player</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
-    input, textarea { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
-    button { padding: 10px 20px; font-size: 16px; }
-  </style>
+<meta charset="UTF-8" />
+<title>Generador de enlace encriptado</title>
+<style>
+  body { background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+  input, button, textarea { width: 100%; margin: 10px 0; padding: 10px; font-size: 1rem; }
+  textarea { height: 100px; resize: none; }
+  label { font-weight: bold; }
+</style>
 </head>
 <body>
-  <h2>🔐 Encriptador de Enlaces MP4 / M3U8</h2>
-  <label for="videoUrl">Enlace del video:</label>
-  <input type="text" id="videoUrl" placeholder="https://example.com/video.m3u8" />
 
-  <button onclick="generarEnlace()">Generar Enlace</button>
+<h2>Generador de enlace encriptado (base64)</h2>
 
-  <h3>📎 Enlace generado:</h3>
-  <textarea id="linkGenerado" rows="3" readonly></textarea>
+<label for="urlInput">Pega aquí el enlace de video:</label>
+<input type="text" id="urlInput" placeholder="https://ejemplo.com/video.mp4" />
 
-  <script>
-    function generarEnlace() {
-      const url = document.getElementById('videoUrl').value.trim();
-      if (!url) return alert("Por favor ingresa un enlace de video válido.");
-      const base64 = btoa(url); // Encriptación Base64
+<button onclick="generarEnlace()">Generar enlace encriptado</button>
 
-      // URL fija del desencriptador desde GitHub Pages
-      const enlace = `https://lzrdrz10.github.io/play/desencriptador.html?id=${base64}`;
-      document.getElementById('linkGenerado').value = enlace;
-    }
-  </script>
+<label for="result">Enlace generado:</label>
+<textarea id="result" readonly></textarea>
+
+<script>
+function generarEnlace() {
+  var url = document.getElementById('urlInput').value.trim();
+  if (!url) {
+    alert('Por favor, ingresa un enlace válido.');
+    return;
+  }
+  // Codificar en base64
+  var encoded = btoa(url);
+  // Generar enlace con el parámetro "link"
+  var currentUrl = window.location.href.split('?')[0];
+  var generatedLink = currentUrl + '?link=' + encodeURIComponent(encoded);
+  document.getElementById('result').value = generatedLink;
+}
+</script>
+
 </body>
 </html>
