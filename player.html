@@ -1,54 +1,241 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-ES">
 <head>
-<meta charset="UTF-8" />
-<title>Reproductor JWPlayer con enlace encriptado</title>
-<style>
-  body { margin:0; background:#000; }
-  #player { width: 100vw; height: 100vh; }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/disable-devtool"></script>
-<script src="https://ssl.p.jwpcdn.com/player/v/8.18.4/jwplayer.js"></script>
+    <!-- Existing styles and meta tags remain unchanged -->
+    <style>
+    #autoplay-message {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1000;
+      text-align: center;
+      font-size: 14px;
+    }
+    </style>
+    <meta charset="UTF-8">
+    <title>OX Mine Player | Netflix</title>
+    <!-- Rest of your CSS remains unchanged -->
 </head>
 <body>
+    <!-- Existing HTML structure remains unchanged -->
+    <style>
+      #player {
+        position: absolute;
+        width: 100% !important;
+        height: 100% !important;
+      }
+    </style>
 
-<div id="player"></div>
+    <div id="player"></div>
+    <div id="autoplay-message">Toca para iniciar la reproducción</div>
 
-<script>
-jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    <div class="modal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <img alt="backdrop" class="backdrop" src="https://studio.blender.org/static-studio/films/images/sprite-fright/story.22d84f0a3410.png" />
+          <strong>🛑 ADBlock Detected! 🛑</strong>
+          <button type="button" aria-label="Close" id="close">
+            <img alt="close" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ii8+PHBhdGggZD0iTTEyIDEwLjU4Nmw0Ljk1LTQuOTUgMS40MTQgMS40MTQtNC45NSA0Ljk1IDQuOTUgNC45NS0xLjQxNCAxLjQxNC00Ljk1LTQuOTUtNC45NSA0Ljk1LTEuNDE0LTEuNDE0IDQuOTUtNC45NS00Ljk1LTQuOTVMNy4wNSA1LjYzNnoiIGZpbGw9InJnYmEoMjQ3LDI0NywyNDcsMSkiLz48L3N2Zz4=" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <span>Ads do help us to keep website running, so please support us by whitelisting our site in your Adblocking software. Apart from your browser adblocker, you may have to whitelist us in your VPN/Security software's adblockers as well. Once done, just refresh this web page.</span>
+        </div>
+      </div>
+    </div>
 
-// Función para obtener parámetros de URL
-function getParameterByName(name) {
-  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-  var results = regex.exec(location.search);
-  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
+    <script src='https://content.jwplatform.com/libraries/KB5zFt7A.js'></script>
 
-function decodeBase64(str) {
-  try {
-    return atob(str);
-  } catch (e) {
-    return null;
-  }
-}
+    <script>
+    function getUrlParameter(name) {
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+      return results ? decodeURIComponent(results[1].replace(/\+/g, " ")) : "";
+    }
 
-var encodedLink = getParameterByName('link');
-var videoLink = decodeBase64(encodedLink);
+    // Retrieve parameters directly as plain text (no Base64 decoding)
+    const videoUrl = getUrlParameter("video") || "default-video.mp4";
+    const posterUrl = getUrlParameter("poster") || "default-poster.jpg";
+    const videoTitle = getUrlParameter("title") || "Sin título";
 
-if (!videoLink) {
-  alert('No se encontró un enlace válido para reproducir.');
-} else {
-  jwplayer("player").setup({
-    file: videoLink,
-    width: "100%",
-    height: "100%",
-    autostart: false,
-    controls: true,
-    skin: "netflix"
-  });
-}
-</script>
+    const timeElapseKey = `playbackTime_${videoTitle.replace(/\s+/g, '_')}`;
 
+    function prettySecond(s) {
+      var num = parseInt(s, 10),
+          hrs = Math.floor(num / 3600),
+          min = Math.floor((num - (hrs * 3600)) / 60),
+          sec = num - (hrs * 3600) - (min * 60);
+      if (hrs < 10) hrs = "0" + hrs;
+      if (min < 10) min = "0" + min;
+      if (sec < 10) sec = "0" + sec;
+      return hrs + ":" + min + ":" + sec;
+    }
+
+    function savePlaybackProgress(time) {
+      if (time > 0) {
+        localStorage.setItem(timeElapseKey, Math.round(time));
+        console.log('Progreso guardado:', prettySecond(time));
+      }
+    }
+
+    const playerInstance = jwplayer("player").setup({
+      controls: true,
+      sharing: false,
+      displaytitle: true,
+      displaydescription: true,
+      abouttext: "Donar",
+      aboutlink: "https://paypal.me/LzRdrgz",
+      skin: { name: "netflix" },
+      autostart: true,
+      mute: false,
+      logo: false,
+      captions: {
+        color: "#FFF",
+        fontSize: 14,
+        backgroundOpacity: 0,
+        edgeStyle: "raised"
+      },
+      playlist: [
+        {
+          title: videoTitle,
+          description: "Estas Viendo LzPlay:",
+          image: posterUrl,
+          sources: [
+            { file: videoUrl, label: "1080p", default: true },
+            { file: videoUrl, label: "720p" },
+            { file: videoUrl, label: "480p" }
+          ]
+        }
+      ],
+      advertising: {
+        client: "vast",
+        schedule: [
+          { offset: "pre", tag: "https://raw.githubusercontent.com/Luis07019/LDR/refs/heads/main/script.xl" }
+        ]
+      }
+    });
+
+    // Rest of the JavaScript remains unchanged
+    playerInstance.on("ready", function () {
+      function buttonClickAction() {
+        const playlistItem = playerInstance.getPlaylistItem();
+        const anchor = document.createElement("a");
+        anchor.href = playlistItem.file;
+        anchor.setAttribute("download", playlistItem.file.split("/").pop());
+        anchor.style.display = "none";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+      }
+
+      if (false) {
+        playerInstance.addButton(
+          "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ii8+PHBhdGggZD0iTTMgMTloMTh2Mkgzdi0yem0xMC01LjgyOEwxOS4wNzEgNy4xbDEuNDE0IDEuNDE0TDEyIDE3IDMuNTE1IDguNTE1IDQuOTI5IDcuMSAxMSAxMy4xN1YyaDJ2MTEuMTcyeiIgZmlsbD0icmdiYSgyNDcsMjQ3LDI0NywxKSIvPjwvc3ZnPg==",
+          "Descargar Video",
+          buttonClickAction,
+          "download-video-button"
+        );
+      }
+
+      const playerContainer = playerInstance.getContainer();
+      const rewindContainer = playerContainer.querySelector(".jw-display-icon-rewind");
+      const nextContainer = playerContainer.querySelector(".jw-display-icon-next");
+      if (nextContainer) {
+        nextContainer.remove(); // Remove the .jw-display-icon-next element
+      }
+      if (rewindContainer) {
+        const forwardContainer = rewindContainer.cloneNode(true);
+        const forwardDisplayButton = forwardContainer.querySelector(".jw-icon-rewind");
+        forwardDisplayButton.style.transform = "scaleX(-1)";
+        forwardDisplayButton.ariaLabel = "Adelantar 10 segundos";
+        const displayControls = playerContainer.querySelector(".jw-display-controls");
+        displayControls.appendChild(forwardContainer);
+        
+        const buttonContainer = playerContainer.querySelector(".jw-button-container");
+        const rewindControlBarButton = buttonContainer.querySelector(".jw-icon-rewind");
+        const forwardControlBarButton = rewindControlBarButton.cloneNode(true);
+        forwardControlBarButton.style.transform = "scaleX(-1)";
+        forwardControlBarButton.ariaLabel = "Adelantar 10 segundos";
+        rewindControlBarButton.parentNode.insertBefore(forwardControlBarButton, rewindControlBarButton.nextElementSibling);
+        
+        [forwardDisplayButton, forwardControlBarButton].forEach((button) => {
+          button.onclick = () => {
+            playerInstance.seek(playerInstance.getPosition() + 10);
+          };
+        });
+      }
+
+      const logoElement = playerContainer.querySelector(".jw-logo");
+      if (logoElement) {
+        logoElement.addEventListener("click", function () {
+          const playlistItem = playerInstance.getPlaylistItem();
+          const videoUrl = playlistItem.file;
+          const webVideoCasterUrl = `wvc-x-callback://open?url=${encodeURIComponent(videoUrl)}&secure_uri=true`;
+          window.location.href = webVideoCasterUrl;
+        });
+      }
+
+      const slider = playerContainer.querySelector(".jw-slider-time");
+      const buttonContainer = playerContainer.querySelector(".jw-button-container");
+      const settingsButton = playerContainer.querySelector(".jw-spacer");
+      buttonContainer.insertBefore(slider, settingsButton);
+    });
+
+    playerInstance.on('firstFrame', function () {
+      const savedTime = parseInt(localStorage.getItem(timeElapseKey), 10);
+      if (savedTime && savedTime > 0) {
+        console.log('Reanudando desde:', prettySecond(savedTime));
+        playerInstance.seek(savedTime);
+        playerInstance.play().catch((err) => {
+          console.error('Error al intentar reproducir automáticamente:', err);
+          document.getElementById('autoplay-message').style.display = 'block';
+          setTimeout(() => {
+            document.getElementById('autoplay-message').style.display = 'none';
+          }, 5000);
+        });
+      }
+    });
+
+    playerInstance.on('time', function (event) {
+      const currentTime = event.position;
+      if (currentTime > 0 && !playerInstance.getConfig().isLive) {
+        savePlaybackProgress(currentTime);
+      }
+    });
+
+    playerInstance.on('pause', function () {
+      savePlaybackProgress(playerInstance.getPosition());
+    });
+
+    playerInstance.on('complete', function () {
+      localStorage.removeItem(timeElapseKey);
+      console.log('Video finalizado, progreso eliminado.');
+    });
+
+    window.addEventListener('beforeunload', () => {
+      savePlaybackProgress(playerInstance.getPosition());
+    });
+
+    playerInstance.on('error', (e) => {
+      console.error('Error en JWPlayer:', e);
+      alert('Error al cargar el video: ' + e.message);
+    });
+
+    let hasEnteredFullscreen = false;
+    playerInstance.on('play', function () {
+      document.getElementById('autoplay-message').style.display = 'none';
+      if (!hasEnteredFullscreen && document.fullscreenEnabled) {
+        playerInstance.setFullscreen(true);
+        hasEnteredFullscreen = true;
+      }
+    });
+    </script>
 </body>
 </html>
