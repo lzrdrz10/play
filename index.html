@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de Video.js</title>
+<title>Panel Video.js</title>
 <style>
     body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    textarea { width: 100%; height: 60px; margin-top: 10px; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; border-radius: 5px; border: none; }
+    button { background: #dd3333; color: #fff; cursor: pointer; }
+    button:hover { background: #ff5555; }
+    textarea { width: 100%; height: 60px; margin-top: 10px; border-radius: 5px; padding: 10px; }
 </style>
 </head>
 <body>
+
 <h2>Panel de Video.js</h2>
 <p>Pega un enlace o ID de video de ok.ru:</p>
 <input type="text" id="videoInput" placeholder="Ej: 283265862256 o https://ok.ru/video/283265862256" />
@@ -24,15 +27,16 @@ function generarEnlace() {
     const input = document.getElementById('videoInput').value.trim();
     if(!input) { alert("Debes ingresar un ID o enlace."); return; }
 
-    // Extraer ID si pegaste un enlace completo
+    // Extraer ID si es un enlace completo
     let videoID = input;
     const match = input.match(/ok\.ru\/video\/(\d+)/);
     if(match) videoID = match[1];
 
-    // Generar enlace a tu servidor
-    const enlace = `https://sv3.sosanovel.com/okruembed/?v=${videoID}`;
+    // URL de tu propio player en GitHub Pages
+    const enlace = `https://lzrdrz10.github.io/play/player.html?v=${videoID}`;
     document.getElementById('outputLink').value = enlace;
 }
 </script>
+
 </body>
 </html>
