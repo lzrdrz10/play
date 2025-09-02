@@ -1,241 +1,184 @@
 <!DOCTYPE html>
-<html lang="es-ES">
+<html>
 <head>
-    <!-- Existing styles and meta tags remain unchanged -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <link href="quality-selector.css" rel="stylesheet">
     <style>
-    #autoplay-message {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      z-index: 1000;
-      text-align: center;
-      font-size: 14px;
-    }
+        /* RESET CSS */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: inherit;
+        }
+
+        html {
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        .mainPlayer {
+            position: absolute;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .video-js .vjs-menu-button-inline.vjs-slider-active,
+        .video-js .vjs-menu-button-inline:focus,
+        .video-js .vjs-menu-button-inline:hover,
+        .video-js.vjs-no-flex .vjs-menu-button-inline {
+            width: 10em;
+        }
+
+        .video-js .vjs-controls-disabled .vjs-big-play-button {
+            display: none !important;
+        }
+
+        .video-js .vjs-control {
+            width: 3em;
+        }
+
+        .video-js .vjs-menu-button-inline:before {
+            width: 1.5em;
+        }
+
+        .vjs-menu-button-inline .vjs-menu {
+            left: 3em;
+        }
+
+        .vjs-paused.vjs-has-started.video-js .vjs-big-play-button,
+        .video-js.vjs-ended .vjs-big-play-button,
+        .video-js.vjs-paused .vjs-big-play-button {
+            display: block;
+        }
+
+        .video-js .vjs-load-progress div,
+        .vjs-seeking .vjs-big-play-button,
+        .vjs-waiting .vjs-big-play-button {
+            display: none !important;
+        }
+
+        .video-js .vjs-mouse-display:after,
+        .video-js .vjs-play-progress:after {
+            padding: 0 0.4em 0.3em !important;
+        }
+
+        .video-js.vjs-ended .vjs-loading-spinner {
+            display: none;
+        }
+
+        .video-js .vjs-big-play-button {
+            top: 50%;
+            left: 50%;
+            margin-left: -1.5em;
+            margin-top: -1em;
+            background-color: #dd3333;
+            font-size: 2.5em;
+            border-radius: 50%;
+            height: 2em !important;
+            line-height: 2em !important;
+            border-width: 4px;
+        }
+
+        .video-js:hover .vjs-big-play-button,
+        .video-js .vjs-big-play-button:focus,
+        .video-js .vjs-big-play-button:active {
+            background-color: #dd3333;
+        }
+
+        .video-js .vjs-loading-spinner {
+            border-color: #dd3333;
+        }
+
+        .video-js .vjs-control-bar {
+            background-color: rgba(0, 0, 0, 0) !important;
+            color: #ffffff;
+        }
+
+        .video-js .vjs-play-progress,
+        .video-js .vjs-volume-level {
+            background-color: #dd3333;
+        }
+
+        .video-js .vjs-progress-holder .vjs-play-progress,
+        .video-js .vjs-progress-holder .vjs-load-progress,
+        .video-js .vjs-progress-holder .vjs-load-progress div,
+        .video-js .vjs-slider,
+        .vjs-volume-level {
+            border-radius: 10px;
+        }
+
+        .video-js .vjs-load-progress {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .video-container {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        .video-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1;
+        }
+
+        .video-container:hover::before {
+            opacity: 1;
+        }
+
+        .video-container:hover video {
+            transform: scale(1.2);
+        }
+
+        .vjs-menu-content {
+            transform: translate(-20px, 0px) !important;
+        }
     </style>
-    <meta charset="UTF-8">
-    <title>OX Mine Player | Netflix</title>
-    <!-- Rest of your CSS remains unchanged -->
 </head>
 <body>
-    <!-- Existing HTML structure remains unchanged -->
-    <style>
-      #player {
-        position: absolute;
-        width: 100% !important;
-        height: 100% !important;
-      }
-    </style>
-
-    <div id="player"></div>
-    <div id="autoplay-message">Toca para iniciar la reproducción</div>
-
-    <div class="modal">
-      <div class="modal-container">
-        <div class="modal-header">
-          <img alt="backdrop" class="backdrop" src="https://studio.blender.org/static-studio/films/images/sprite-fright/story.22d84f0a3410.png" />
-          <strong>🛑 ADBlock Detected! 🛑</strong>
-          <button type="button" aria-label="Close" id="close">
-            <img alt="close" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ii8+PHBhdGggZD0iTTEyIDEwLjU4Nmw0Ljk1LTQuOTUgMS40MTQgMS40MTQtNC45NSA0Ljk1IDQuOTUgNC45NS0xLjQxNCAxLjQxNC00Ljk1LTQuOTUtNC45NSA0Ljk1LTEuNDE0LTEuNDE0IDQuOTUtNC45NS00Ljk1LTQuOTVMNy4wNSA1LjYzNnoiIGZpbGw9InJnYmEoMjQ3LDI0NywyNDcsMSkiLz48L3N2Zz4=" />
-          </button>
-        </div>
-        <div class="modal-body">
-          <span>Ads do help us to keep website running, so please support us by whitelisting our site in your Adblocking software. Apart from your browser adblocker, you may have to whitelist us in your VPN/Security software's adblockers as well. Once done, just refresh this web page.</span>
-        </div>
-      </div>
+    <div class="video-container">
+        <video id="my-video" class="video-js mainPlayer" controls preload="auto" poster="">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a
+                web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+            </p>
+        </video>
     </div>
 
-    <script src='https://content.jwplatform.com/libraries/KB5zFt7A.js'></script>
-
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+    <script src="silvermine-videojs-quality-selector.min.js"></script>
     <script>
-    function getUrlParameter(name) {
-      name = name.replace(/[\[\]]/g, "\\$&");
-      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-      return results ? decodeURIComponent(results[1].replace(/\+/g, " ")) : "";
-    }
-
-    // Retrieve parameters directly as plain text (no Base64 decoding)
-    const videoUrl = getUrlParameter("video") || "default-video.mp4";
-    const posterUrl = getUrlParameter("poster") || "default-poster.jpg";
-    const videoTitle = getUrlParameter("title") || "Sin título";
-
-    const timeElapseKey = `playbackTime_${videoTitle.replace(/\s+/g, '_')}`;
-
-    function prettySecond(s) {
-      var num = parseInt(s, 10),
-          hrs = Math.floor(num / 3600),
-          min = Math.floor((num - (hrs * 3600)) / 60),
-          sec = num - (hrs * 3600) - (min * 60);
-      if (hrs < 10) hrs = "0" + hrs;
-      if (min < 10) min = "0" + min;
-      if (sec < 10) sec = "0" + sec;
-      return hrs + ":" + min + ":" + sec;
-    }
-
-    function savePlaybackProgress(time) {
-      if (time > 0) {
-        localStorage.setItem(timeElapseKey, Math.round(time));
-        console.log('Progreso guardado:', prettySecond(time));
-      }
-    }
-
-    const playerInstance = jwplayer("player").setup({
-      controls: true,
-      sharing: false,
-      displaytitle: true,
-      displaydescription: true,
-      abouttext: "Donar",
-      aboutlink: "https://paypal.me/LzRdrgz",
-      skin: { name: "netflix" },
-      autostart: true,
-      mute: false,
-      logo: false,
-      captions: {
-        color: "#FFF",
-        fontSize: 14,
-        backgroundOpacity: 0,
-        edgeStyle: "raised"
-      },
-      playlist: [
-        {
-          title: videoTitle,
-          description: "Estas Viendo LzPlay:",
-          image: posterUrl,
-          sources: [
-            { file: videoUrl, label: "1080p", default: true },
-            { file: videoUrl, label: "720p" },
-            { file: videoUrl, label: "480p" }
-          ]
-        }
-      ],
-      advertising: {
-        client: "vast",
-        schedule: [
-          { offset: "pre", tag: "https://raw.githubusercontent.com/Luis07019/LDR/refs/heads/main/script.xl" }
-        ]
-      }
-    });
-
-    // Rest of the JavaScript remains unchanged
-    playerInstance.on("ready", function () {
-      function buttonClickAction() {
-        const playlistItem = playerInstance.getPlaylistItem();
-        const anchor = document.createElement("a");
-        anchor.href = playlistItem.file;
-        anchor.setAttribute("download", playlistItem.file.split("/").pop());
-        anchor.style.display = "none";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-      }
-
-      if (false) {
-        playerInstance.addButton(
-          "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ii8+PHBhdGggZD0iTTMgMTloMTh2Mkgzdi0yem0xMC01LjgyOEwxOS4wNzEgNy4xbDEuNDE0IDEuNDE0TDEyIDE3IDMuNTE1IDguNTE1IDQuOTI5IDcuMSAxMSAxMy4xN1YyaDJ2MTEuMTcyeiIgZmlsbD0icmdiYSgyNDcsMjQ3LDI0NywxKSIvPjwvc3ZnPg==",
-          "Descargar Video",
-          buttonClickAction,
-          "download-video-button"
-        );
-      }
-
-      const playerContainer = playerInstance.getContainer();
-      const rewindContainer = playerContainer.querySelector(".jw-display-icon-rewind");
-      const nextContainer = playerContainer.querySelector(".jw-display-icon-next");
-      if (nextContainer) {
-        nextContainer.remove(); // Remove the .jw-display-icon-next element
-      }
-      if (rewindContainer) {
-        const forwardContainer = rewindContainer.cloneNode(true);
-        const forwardDisplayButton = forwardContainer.querySelector(".jw-icon-rewind");
-        forwardDisplayButton.style.transform = "scaleX(-1)";
-        forwardDisplayButton.ariaLabel = "Adelantar 10 segundos";
-        const displayControls = playerContainer.querySelector(".jw-display-controls");
-        displayControls.appendChild(forwardContainer);
-        
-        const buttonContainer = playerContainer.querySelector(".jw-button-container");
-        const rewindControlBarButton = buttonContainer.querySelector(".jw-icon-rewind");
-        const forwardControlBarButton = rewindControlBarButton.cloneNode(true);
-        forwardControlBarButton.style.transform = "scaleX(-1)";
-        forwardControlBarButton.ariaLabel = "Adelantar 10 segundos";
-        rewindControlBarButton.parentNode.insertBefore(forwardControlBarButton, rewindControlBarButton.nextElementSibling);
-        
-        [forwardDisplayButton, forwardControlBarButton].forEach((button) => {
-          button.onclick = () => {
-            playerInstance.seek(playerInstance.getPosition() + 10);
-          };
+        // Initialize Video.js player
+        const player = videojs('my-video', {
+            controlBar: {
+                skipButtons: {
+                    forward: 10,
+                    backward: 10
+                }
+            },
+            sources: [] // Sources will be set dynamically
+        }, function() {
+            this.controlBar.addChild('QualitySelector');
         });
-      }
 
-      const logoElement = playerContainer.querySelector(".jw-logo");
-      if (logoElement) {
-        logoElement.addEventListener("click", function () {
-          const playlistItem = playerInstance.getPlaylistItem();
-          const videoUrl = playlistItem.file;
-          const webVideoCasterUrl = `wvc-x-callback://open?url=${encodeURIComponent(videoUrl)}&secure_uri=true`;
-          window.location.href = webVideoCasterUrl;
-        });
-      }
-
-      const slider = playerContainer.querySelector(".jw-slider-time");
-      const buttonContainer = playerContainer.querySelector(".jw-button-container");
-      const settingsButton = playerContainer.querySelector(".jw-spacer");
-      buttonContainer.insertBefore(slider, settingsButton);
-    });
-
-    playerInstance.on('firstFrame', function () {
-      const savedTime = parseInt(localStorage.getItem(timeElapseKey), 10);
-      if (savedTime && savedTime > 0) {
-        console.log('Reanudando desde:', prettySecond(savedTime));
-        playerInstance.seek(savedTime);
-        playerInstance.play().catch((err) => {
-          console.error('Error al intentar reproducir automáticamente:', err);
-          document.getElementById('autoplay-message').style.display = 'block';
-          setTimeout(() => {
-            document.getElementById('autoplay-message').style.display = 'none';
-          }, 5000);
-        });
-      }
-    });
-
-    playerInstance.on('time', function (event) {
-      const currentTime = event.position;
-      if (currentTime > 0 && !playerInstance.getConfig().isLive) {
-        savePlaybackProgress(currentTime);
-      }
-    });
-
-    playerInstance.on('pause', function () {
-      savePlaybackProgress(playerInstance.getPosition());
-    });
-
-    playerInstance.on('complete', function () {
-      localStorage.removeItem(timeElapseKey);
-      console.log('Video finalizado, progreso eliminado.');
-    });
-
-    window.addEventListener('beforeunload', () => {
-      savePlaybackProgress(playerInstance.getPosition());
-    });
-
-    playerInstance.on('error', (e) => {
-      console.error('Error en JWPlayer:', e);
-      alert('Error al cargar el video: ' + e.message);
-    });
-
-    let hasEnteredFullscreen = false;
-    playerInstance.on('play', function () {
-      document.getElementById('autoplay-message').style.display = 'none';
-      if (!hasEnteredFullscreen && document.fullscreenEnabled) {
-        playerInstance.setFullscreen(true);
-        hasEnteredFullscreen = true;
-      }
-    });
+        // Function to update video sources dynamically
+        window.setVideoSources = function(sources) {
+            player.src(sources);
+            player.poster(sources[0]?.poster || ''); // Set poster if provided in sources
+        };
     </script>
 </body>
 </html>
