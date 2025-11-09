@@ -1,39 +1,266 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de Video.js</title>
+<title>Coronel TV — IPTV + Pluto TV MX</title>
+<!-- HLS.js para streams .m3u8 -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
-    body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    textarea { width: 100%; height: 60px; margin-top: 10px; }
+  body { margin:0; font-family:Arial,sans-serif; background:#0a1b2a; color:#fff; }
+  .container { max-width:1200px; margin:auto; padding:10px; }
+  .header { text-align:center; margin-bottom:20px; }
+  .header h1 { margin:0; color:#00aaff; }
+  .header p { margin:5px 0; font-size:14px; }
+  .header input { padding:8px; border-radius:6px; border:none; margin:5px; font-size:14px; width:80%; }
+  .player-wrap { position:relative; background:#000; border-radius:10px; overflow:hidden; margin-bottom:10px; }
+  video { width:100%; height:500px; background:#000; border-radius:10px; }
+  .controls { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; padding:10px; background:#0b2c44; border-radius:0 0 10px 10px; }
+  .controls button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; background:#007bff; color:#fff; font-weight:bold; }
+  .category-carousel { display:flex; overflow-x:auto; gap:10px; padding:10px 0; margin-bottom:20px; }
+  .category-carousel button { flex:0 0 auto; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; background:#00aaff; color:#000; font-weight:bold; white-space:nowrap; }
+  .category-carousel button.active { background:#ff4d4d; color:#fff; }
+  .matches { display:grid; grid-template-columns:1fr; gap:10px; max-height:700px; overflow-y:auto; }
+  .match { display:flex; align-items:center; justify-content:space-between; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); }
+  .match .info { display:flex; align-items:center; gap:10px; }
+  .match img { width:50px; height:50px; border-radius:4px; object-fit:contain; background:#fff; }
+  .match .title { font-weight:bold; font-size:14px; }
+  .live { color:#ff4d4d; font-weight:bold; margin-left:8px; }
+  button.playBtn { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; background:#007bff; color:#fff; font-weight:bold; font-size:12px; }
+  .source { font-size:10px; color:#aaa; margin-left:5px; }
+  .error { color:#ff6b6b; text-align:center; padding:20px; }
+  @media(max-width:768px){ video { height:300px; } }
+  /* PRELOADER */
+  :root { --preloader-time: 3s; }
+  #preloader { position:fixed; inset:0; background:#141414; display:flex; align-items:center; justify-content:center; z-index:99999; transition:opacity 0.8s ease; }
+  #preloader.hide { opacity:0; pointer-events:none; }
+  .preloader-content { text-align:center; color:#65615F; display:flex; flex-direction:column; align-items:center; gap:15px; }
+  .preloader-content img { width:220px; max-width:80vw; filter:drop-shadow(0px -2px 9px #303030); }
+  .prog-bar-wrapper { width:205px; height:6px; position:relative; border-radius:50px; overflow:hidden; }
+  .prog-bar-bg { position:absolute; top:0; left:0; width:100%; height:100%; background:#919191; border-radius:50px; }
+  .prog-bar { position:absolute; top:0; left:0; width:0; height:100%; background:linear-gradient(to right,#e300ff,#007cf0); border-radius:50px; animation:loadbar var(--preloader-time) forwards; }
+  @keyframes loadbar { to { width:100%; } }
+  .preloader-extra { display:grid; grid-template-columns:auto 1fr; align-items:center; font-size:12px; gap:8px; }
+  .spinner div { width:20px; height:20px; border:4px solid #65615F; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
-<h2>Panel de Video.js</h2>
-<p>Pega un enlace o ID de video de ok.ru:</p>
-<input type="text" id="videoInput" placeholder="Ej: 283265862256 o https://ok.ru/video/283265862256" />
-<button onclick="generarEnlace()">Generar enlace</button>
 
-<h3>Enlace generado:</h3>
-<textarea id="outputLink" readonly></textarea>
+<div id="preloader">
+  <div class="preloader-content">
+    <img src="https://seeklogo.com/images/T/tv-logo-F7231DA292-seeklogo.com.png" alt="Logo" />
+    <div class="prog-bar-wrapper">
+      <div class="prog-bar-bg"></div><div class="prog-bar"></div>
+    </div>
+    <div class="preloader-extra">
+      <div class="spinner"><div></div></div>
+      <p>Cargando canales...</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>Coronel TV</h1>
+    <p>IPTV + Pluto TV México</p>
+    <input type="text" id="search" placeholder="Buscar canal (ej: Alerta Cobra, ESPN, Pluto)">
+  </div>
+
+  <div class="player-wrap">
+    <video id="tvPlayer" controls autoplay playsinline></video>
+    <div class="controls">
+      <button id="restartBtn">Reiniciar</button>
+      <button id="fullscreenBtn">Pantalla Completa</button>
+    </div>
+    <div class="category-carousel" id="categoryCarousel"></div>
+  </div>
+
+  <div class="matches" id="matchesList"></div>
+</div>
 
 <script>
-function generarEnlace() {
-    const input = document.getElementById('videoInput').value.trim();
-    if(!input) { alert("Debes ingresar un ID o enlace."); return; }
+// Preloader
+document.addEventListener("DOMContentLoaded", () => {
+  const preloader = document.getElementById("preloader");
+  const ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--preloader-time")) * 1000;
+  setTimeout(() => preloader.classList.add("hide"), ms);
+});
 
-    // Extraer ID si pegaste un enlace completo
-    let videoID = input;
-    const match = input.match(/ok\.ru\/video\/(\d+)/);
-    if(match) videoID = match[1];
+// Elementos
+const video = document.getElementById('tvPlayer');
+const matchesList = document.getElementById('matchesList');
+const searchInput = document.getElementById('search');
+const restartBtn = document.getElementById('restartBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const categoryCarousel = document.getElementById('categoryCarousel');
+let currentUrl = "";
+let hls = null;
+let canales = [];
+let categorias = [];
+let currentCategory = "all";
 
-    // Generar enlace a tu servidor
-    const enlace = `https://sv3.sosanovel.com/okruembed/?v=${videoID}`;
-    document.getElementById('outputLink').value = enlace;
+// === LISTAS M3U (2 fuentes) ===
+const m3uUrls = [
+  "https://iptv-org.github.io/iptv/index.m3u", // +8000 canales
+  "https://raw.githubusercontent.com/HelmerLuzo/PlutoTV_HL/4c9e648d2c2b070f43648ca5b231156f5858f019/tv/m3u/PlutoTV_tv_MX.m3u" // Pluto TV MX
+];
+
+// --- Parsear M3U
+function parseM3U(data, sourceName = "") {
+  let lines = data.split("\n");
+  let info = null;
+  let list = [];
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.startsWith("#EXTINF")) {
+      let name = line.match(/,(.+)$/);
+      let logo = line.match(/tvg-logo="([^"]+)"/);
+      let group = line.match(/group-title="([^"]+)"/);
+      info = {
+        nombre: name ? name[1].trim() : "Canal",
+        logo: logo ? logo[1] : "https://via.placeholder.com/50x50/000/fff?text=TV",
+        grupo: group ? group[1] : "Otros",
+        url: "",
+        source: sourceName
+      };
+    } else if (line && !line.startsWith("#") && info) {
+      info.url = line;
+      list.push(info);
+      info = null;
+    }
+  });
+  return list;
 }
+
+// --- Reproducir stream directo
+function playStream(url) {
+  currentUrl = url;
+  if (hls) hls.destroy();
+
+  if (Hls.isSupported() && url.includes('.m3u8')) {
+    hls = new Hls({ xhrSetup: (xhr) => { xhr.withCredentials = false; } });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+  } else if (video.canPlayType('application/vnd.apple.mpegurl') && url.includes('.m3u8')) {
+    video.src = url;
+    video.play().catch(() => {});
+  } else {
+    video.src = url;
+    video.play().catch(() => {});
+  }
+}
+
+// --- Renderizar canales
+function renderChannels() {
+  const filtro = searchInput.value.trim().toLowerCase();
+  matchesList.innerHTML = "";
+
+  let filtered = canales
+    .filter(c => {
+      if (filtro) return c.nombre.toLowerCase().includes(filtro);
+      return currentCategory === "all" || c.grupo === currentCategory;
+    })
+    .slice(0, 500);
+
+  if (filtered.length === 0) {
+    matchesList.innerHTML = '<div class="error">No se encontraron canales.</div>';
+    return;
+  }
+
+  filtered.forEach(canal => {
+    let div = document.createElement("div");
+    div.className = "match";
+    div.innerHTML = `
+      <div class="info">
+        <img src="${canal.logo}" alt="${canal.nombre}" onerror="this.src='https://via.placeholder.com/50x50/000/fff?text=TV'">
+        <div class="title">${canal.nombre} <span class="live">EN VIVO</span><span class="source">[${canal.source}]</span></div>
+      </div>
+      <button class="playBtn">Ver</button>
+    `;
+    div.querySelector(".playBtn").onclick = () => playStream(canal.url);
+    matchesList.appendChild(div);
+  });
+}
+
+// --- Botones
+restartBtn.onclick = () => currentUrl && playStream(currentUrl);
+fullscreenBtn.onclick = () => video.requestFullscreen?.() || video.webkitEnterFullscreen?.();
+
+// --- Búsqueda
+searchInput.addEventListener("input", renderChannels);
+
+// --- Categorías
+function renderCategories() {
+  categoryCarousel.innerHTML = "";
+  let allBtn = document.createElement("button");
+  allBtn.textContent = "Todas";
+  allBtn.className = "active";
+  allBtn.onclick = () => {
+    currentCategory = "all";
+    updateActive(allBtn);
+    renderChannels();
+  };
+  categoryCarousel.appendChild(allBtn);
+
+  // Priorizar Pluto TV
+  if (categorias.includes("Nuevo en Pluto TV")) {
+    addCategoryButton("Nuevo en Pluto TV");
+  }
+  if (categorias.includes("Pluto TV")) {
+    addCategoryButton("Pluto TV");
+  }
+
+  categorias
+    .filter(cat => cat !== "Nuevo en Pluto TV" && cat !== "Pluto TV")
+    .slice(0, 15)
+    .forEach(addCategoryButton);
+}
+
+function addCategoryButton(cat) {
+  let btn = document.createElement("button");
+  btn.textContent = cat;
+  btn.onclick = () => {
+    currentCategory = cat;
+    updateActive(btn);
+    renderChannels();
+  };
+  categoryCarousel.appendChild(btn);
+}
+
+function updateActive(activeBtn) {
+  Array.from(categoryCarousel.children).forEach(b => b.classList.remove("active"));
+  activeBtn.classList.add("active");
+}
+
+// --- Cargar listas
+Promise.all(m3uUrls.map((url, i) => 
+  fetch(url)
+    .then(r => r.ok ? r.text() : "")
+    .catch(() => "")
+))
+.then(datas => {
+  const sources = ["IPTV Global", "Pluto TV MX"];
+  datas.forEach((data, i) => {
+    if (data) {
+      let parsed = parseM3U(data, sources[i]);
+      canales = canales.concat(parsed);
+    }
+  });
+
+  // Eliminar duplicados por URL
+  const seen = new Set();
+  canales = canales.filter(c => c.url && !seen.has(c.url) ? (seen.add(c.url), true) : false);
+
+  categorias = [...new Set(canales.map(c => c.grupo))].sort();
+  renderCategories();
+  renderChannels();
+})
+.catch(() => {
+  matchesList.innerHTML = `<div class="error">Error al cargar listas. Revisa tu conexión.</div>`;
+});
 </script>
+
 </body>
 </html>
