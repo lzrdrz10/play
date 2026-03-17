@@ -1,266 +1,447 @@
-<!DOCTYPE html>
+<!--DOCTYPE html-->
+<title></title>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coronel TV — IPTV + Pluto TV MX</title>
-<!-- HLS.js para streams .m3u8 -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<style>
-  body { margin:0; font-family:Arial,sans-serif; background:#0a1b2a; color:#fff; }
-  .container { max-width:1200px; margin:auto; padding:10px; }
-  .header { text-align:center; margin-bottom:20px; }
-  .header h1 { margin:0; color:#00aaff; }
-  .header p { margin:5px 0; font-size:14px; }
-  .header input { padding:8px; border-radius:6px; border:none; margin:5px; font-size:14px; width:80%; }
-  .player-wrap { position:relative; background:#000; border-radius:10px; overflow:hidden; margin-bottom:10px; }
-  video { width:100%; height:500px; background:#000; border-radius:10px; }
-  .controls { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; padding:10px; background:#0b2c44; border-radius:0 0 10px 10px; }
-  .controls button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; background:#007bff; color:#fff; font-weight:bold; }
-  .category-carousel { display:flex; overflow-x:auto; gap:10px; padding:10px 0; margin-bottom:20px; }
-  .category-carousel button { flex:0 0 auto; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; background:#00aaff; color:#000; font-weight:bold; white-space:nowrap; }
-  .category-carousel button.active { background:#ff4d4d; color:#fff; }
-  .matches { display:grid; grid-template-columns:1fr; gap:10px; max-height:700px; overflow-y:auto; }
-  .match { display:flex; align-items:center; justify-content:space-between; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); }
-  .match .info { display:flex; align-items:center; gap:10px; }
-  .match img { width:50px; height:50px; border-radius:4px; object-fit:contain; background:#fff; }
-  .match .title { font-weight:bold; font-size:14px; }
-  .live { color:#ff4d4d; font-weight:bold; margin-left:8px; }
-  button.playBtn { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; background:#007bff; color:#fff; font-weight:bold; font-size:12px; }
-  .source { font-size:10px; color:#aaa; margin-left:5px; }
-  .error { color:#ff6b6b; text-align:center; padding:20px; }
-  @media(max-width:768px){ video { height:300px; } }
-  /* PRELOADER */
-  :root { --preloader-time: 3s; }
-  #preloader { position:fixed; inset:0; background:#141414; display:flex; align-items:center; justify-content:center; z-index:99999; transition:opacity 0.8s ease; }
-  #preloader.hide { opacity:0; pointer-events:none; }
-  .preloader-content { text-align:center; color:#65615F; display:flex; flex-direction:column; align-items:center; gap:15px; }
-  .preloader-content img { width:220px; max-width:80vw; filter:drop-shadow(0px -2px 9px #303030); }
-  .prog-bar-wrapper { width:205px; height:6px; position:relative; border-radius:50px; overflow:hidden; }
-  .prog-bar-bg { position:absolute; top:0; left:0; width:100%; height:100%; background:#919191; border-radius:50px; }
-  .prog-bar { position:absolute; top:0; left:0; width:0; height:100%; background:linear-gradient(to right,#e300ff,#007cf0); border-radius:50px; animation:loadbar var(--preloader-time) forwards; }
-  @keyframes loadbar { to { width:100%; } }
-  .preloader-extra { display:grid; grid-template-columns:auto 1fr; align-items:center; font-size:12px; gap:8px; }
-  .spinner div { width:20px; height:20px; border:4px solid #65615F; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+<style type="text/css">
+body {
+   margin: 0;
+   padding: 0;
+   background-color:black
+}
+
+@keyframes scaling {
+    from {
+        transform: scale(1);
+        -webkit-transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.1);
+        -webkit-transform: scale(1.1);
+    }
+}
+
+@-webkit-keyframes scaling {
+    from {
+        transform: scale(1);
+        -webkit-transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.1);
+        -webkit-transform: scale(1.1);
+    }
+}
+
+.jw-svg-icon-cc-off path,
+.jw-svg-icon-cc-on path {
+    display: none;
+}
+
+.jw-svg-icon-cc-off,
+.jw-svg-icon-cc-on {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='audio-subtitles'%3E%3Cpath fill='%23ffffff' d='M5,15 L5,13 L12,13 L12,15 L5,15 Z M14,15 L14,13 L19,13 L19,15 L14,15 Z M10,9 L10,11 L5,11 L5,9 L10,9 Z M11.9998571,11 L12.0001429,9.00000001 L19.0001429,9.00100001 L18.9998571,11.001 L11.9998571,11 Z M17,17 L21,17 L21,5 L3,5 L3,17 L12.9968832,17 L17,19.4392488 L17,17 Z M1,3 L23,3 L23,19 L19,19 L19,22.9999671 L12.4355463,19 L1,19 L1,3 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-cc:hover .jw-svg-icon-cc-off,
+.jw-icon-cc:hover .jw-svg-icon-cc-on,
+.jw-settings-captions:hover .jw-svg-icon-cc-off,
+.jw-settings-captions:hover .jw-svg-icon-cc-on,
+.jw-settings-captions[aria-expanded="true"] .jw-svg-icon-cc-off,
+.jw-settings-captions[aria-expanded="true"] .jw-svg-icon-cc-on {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='audio-subtitles'%3E%3Cpath fill='%23FFFFFF' d='M5,15 L5,13 L12,13 L12,15 L5,15 Z M14,15 L14,13 L19,13 L19,15 L14,15 Z M10,9 L10,11 L5,11 L5,9 L10,9 Z M11.9998571,11 L12.0001429,9.00000001 L19.0001429,9.00100001 L18.9998571,11.001 L11.9998571,11 Z M17,17 L21,17 L21,5 L3,5 L3,17 L12.9968832,17 L17,19.4392488 L17,17 Z M1,3 L23,3 L23,19 L19,19 L19,22.9999671 L12.4355463,19 L1,19 L1,3 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-pause path {
+    display: none;
+}
+
+.jw-svg-icon-pause {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='pause'%3E%3Cpath fill='%23ffffff' d='M5,3 L10,3 L10,21 L5,21 L5,3 Z M14,3 L19,3 L19,21 L14,21 L14,3 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-display:hover .jw-svg-icon-pause,
+.jw-icon-playback:hover .jw-svg-icon-pause {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='pause'%3E%3Cpath fill='%23FFFFFF' d='M5,3 L10,3 L10,21 L5,21 L5,3 Z M14,3 L19,3 L19,21 L14,21 L14,3 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-volume-100 path {
+    display: none;
+}
+
+.jw-svg-icon-volume-100 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-high'%3E%3Cpath fill='%23ffffff' d='M9,7.82842712 L6.82842712,10 L4,10 L4,14 L6.82842712,14 L9,16.1715729 L9,7.82842712 Z M11,21 L6,16 L2,16 L2,8 L6,8 L11,3 L11,21 Z M13.7437869,16.3889482 L12.3295734,14.9747347 C13.9546583,13.3496497 13.9546583,10.7148664 12.3295734,9.08978146 L13.7437869,7.6755679 C16.1499205,10.0817014 16.1499205,13.9828147 13.7437869,16.3889482 Z M16.2137399,18.2137399 L14.7995264,16.7995264 C17.4324159,14.1666368 17.4324159,9.89787935 14.7995264,7.26498977 L16.2137399,5.8507762 C19.6276781,9.26471437 19.6276781,14.7998018 16.2137399,18.2137399 Z M18.6836929,20.0385316 L17.2694793,18.6243181 C20.9101736,14.9836239 20.9101736,9.08089228 17.2694793,5.44019807 L18.6836929,4.02598451 C23.1054357,8.4477273 23.1054357,15.6167888 18.6836929,20.0385316 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-volume:hover .jw-svg-icon-volume-100 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-high'%3E%3Cpath fill='%23FFFFFF' d='M9,7.82842712 L6.82842712,10 L4,10 L4,14 L6.82842712,14 L9,16.1715729 L9,7.82842712 Z M11,21 L6,16 L2,16 L2,8 L6,8 L11,3 L11,21 Z M13.7437869,16.3889482 L12.3295734,14.9747347 C13.9546583,13.3496497 13.9546583,10.7148664 12.3295734,9.08978146 L13.7437869,7.6755679 C16.1499205,10.0817014 16.1499205,13.9828147 13.7437869,16.3889482 Z M16.2137399,18.2137399 L14.7995264,16.7995264 C17.4324159,14.1666368 17.4324159,9.89787935 14.7995264,7.26498977 L16.2137399,5.8507762 C19.6276781,9.26471437 19.6276781,14.7998018 16.2137399,18.2137399 Z M18.6836929,20.0385316 L17.2694793,18.6243181 C20.9101736,14.9836239 20.9101736,9.08089228 17.2694793,5.44019807 L18.6836929,4.02598451 C23.1054357,8.4477273 23.1054357,15.6167888 18.6836929,20.0385316 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-volume-50 path {
+    display: none;
+}
+
+.jw-svg-icon-volume-50 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-medium'%3E%3Cpath fill='%23ffffff' d='M11,7.82842712 L8.82842712,10 L6,10 L6,14 L8.82842712,14 L11,16.1715729 L11,7.82842712 Z M13,21 L8,16 L4,16 L4,8 L8,8 L13,3 L13,21 Z M15.7437869,16.3889482 L14.3295734,14.9747347 C15.9546583,13.3496497 15.9546583,10.7148664 14.3295734,9.08978146 L15.7437869,7.6755679 C18.1499205,10.0817014 18.1499205,13.9828147 15.7437869,16.3889482 Z M18.2137399,18.2137399 L16.7995264,16.7995264 C19.4324159,14.1666368 19.4324159,9.89787935 16.7995264,7.26498977 L18.2137399,5.8507762 C21.6276781,9.26471437 21.6276781,14.7998018 18.2137399,18.2137399 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-volume:hover .jw-svg-icon-volume-50 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-medium'%3E%3Cpath fill='%23FFFFFF' d='M11,7.82842712 L8.82842712,10 L6,10 L6,14 L8.82842712,14 L11,16.1715729 L11,7.82842712 Z M13,21 L8,16 L4,16 L4,8 L8,8 L13,3 L13,21 Z M15.7437869,16.3889482 L14.3295734,14.9747347 C15.9546583,13.3496497 15.9546583,10.7148664 14.3295734,9.08978146 L15.7437869,7.6755679 C18.1499205,10.0817014 18.1499205,13.9828147 15.7437869,16.3889482 Z M18.2137399,18.2137399 L16.7995264,16.7995264 C19.4324159,14.1666368 19.4324159,9.89787935 16.7995264,7.26498977 L18.2137399,5.8507762 C21.6276781,9.26471437 21.6276781,14.7998018 18.2137399,18.2137399 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-volume-0 path {
+    display: none;
+}
+
+.jw-svg-icon-volume-0 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-off'%3E%3Cpath fill='%23ffffff' d='M9,7.82842712 L6.82842712,10 L4,10 L4,14 L6.82842712,14 L9,16.1715729 L9,7.82842712 Z M11,21 L6,16 L2,16 L2,8 L6,8 L11,3 L11,21 Z M17,10.5857864 L20.2928932,7.29289322 L21.7071068,8.70710678 L18.4142136,12 L21.7071068,15.2928932 L20.2928932,16.7071068 L17,13.4142136 L13.7071068,16.7071068 L12.2928932,15.2928932 L15.5857864,12 L12.2928932,8.70710678 L13.7071068,7.29289322 L17,10.5857864 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-volume:hover .jw-svg-icon-volume-0 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='volume-off'%3E%3Cpath fill='%23FFFFFF' d='M9,7.82842712 L6.82842712,10 L4,10 L4,14 L6.82842712,14 L9,16.1715729 L9,7.82842712 Z M11,21 L6,16 L2,16 L2,8 L6,8 L11,3 L11,21 Z M17,10.5857864 L20.2928932,7.29289322 L21.7071068,8.70710678 L18.4142136,12 L21.7071068,15.2928932 L20.2928932,16.7071068 L17,13.4142136 L13.7071068,16.7071068 L12.2928932,15.2928932 L15.5857864,12 L12.2928932,8.70710678 L13.7071068,7.29289322 L17,10.5857864 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-fullscreen-on path {
+    display: none;
+}
+
+.jw-svg-icon-fullscreen-on {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='fullscreen-on'%3E%3Cpath fill='%23ffffff' d='M4,6 L4,10 L2,10 L2,4 L8,4 L8,6 L4,6 Z M4,18 L8,18 L8,20 L2,20 L2,14 L4,14 L4,18 Z M6,8 L18,8 L18,16 L6,16 L6,8 Z M20,6 L16,6 L16,4 L22,4 L22,10 L20,10 L20,6 Z M20,18 L20,14 L22,14 L22,20 L16,20 L16,18 L20,18 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-fullscreen:hover .jw-svg-icon-fullscreen-on {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='fullscreen-on'%3E%3Cpath fill='%23FFFFFF' d='M4,6 L4,10 L2,10 L2,4 L8,4 L8,6 L4,6 Z M4,18 L8,18 L8,20 L2,20 L2,14 L4,14 L4,18 Z M6,8 L18,8 L18,16 L6,16 L6,8 Z M20,6 L16,6 L16,4 L22,4 L22,10 L20,10 L20,6 Z M20,18 L20,14 L22,14 L22,20 L16,20 L16,18 L20,18 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-svg-icon-fullscreen-off path {
+    display: none;
+}
+
+.jw-svg-icon-fullscreen-off {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='fullscreen-off'%3E%3Cpath fill='%23ffffff' d='M2,4 L22,4 L22,20 L2,20 L2,4 Z M6,8 L10,8 L10,6 L4,6 L4,10 L6,10 L6,8 Z M6,16 L6,14 L4,14 L4,18 L10,18 L10,16 L6,16 Z M18,8 L18,10 L20,10 L20,6 L14,6 L14,8 L18,8 Z M18,16 L14,16 L14,18 L20,18 L20,14 L18,14 L18,16 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.jw-icon-fullscreen:hover .jw-svg-icon-fullscreen-off {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg id='fullscreen-off'%3E%3Cpath fill='%23FFFFFF' d='M2,4 L22,4 L22,20 L2,20 L2,4 Z M6,8 L10,8 L10,6 L4,6 L4,10 L6,10 L6,8 Z M6,16 L6,14 L4,14 L4,18 L10,18 L10,16 L6,16 Z M18,8 L18,10 L20,10 L20,6 L14,6 L14,8 L18,8 Z M18,16 L14,16 L14,18 L20,18 L20,14 L18,14 L18,16 Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E%0A");
+}
+
+.jw-state-idle .jw-display-controls .jw-display-icon-container {
+    background: 0 0;
+    margin-bottom: 0;
+    border-radius: 50%;
+    animation-name: scaling;
+    -webkit-animation-name: scaling;
+    animation-duration: 0.6s;
+    -webkit-animation-duration: 0.6s;
+    animation-timing-function: linear;
+    -webkit-animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+    animation-direction: alternate;
+    -webkit-animation-direction: alternate;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: solid 0.125rem #f7f7f7;
+    height: 75px;
+    width: 75px;
+}
+
+.jw-state-idle .jw-display-controls .jw-display-icon-container .jw-icon {
+    color: #2271B3 !important;
+    height: 50px;
+    width: 50px;
+    padding: 12px;
+}
+
+.jw-progress,
+.lds-ellipsis div {
+    background: #2271B3 !important;
+}
+
+.jw-settings-menu {
+    border-radius: 0.3em;
+}
+
+.jw-sharing-link:active,
+.jw-sharing-copy:active.jw-sharing-link:hover,
+.jw-button-color.jw-toggle.jw-off:active:not(.jw-icon-cast),
+.jw-button-color.jw-toggle.jw-off:focus:not(.jw-icon-cast),
+.jw-button-color.jw-toggle.jw-off:hover:not(.jw-icon-cast),
+.jw-button-color.jw-toggle:not(.jw-icon-cast),
+.jw-button-color:active:not(.jw-icon-cast),
+.jw-button-color:focus:not(.jw-icon-cast),
+.jw-button-color:hover:not(.jw-icon-cast),
+.jw-button-color[aria-expanded=true]:not(.jw-icon-cast),
+.jw-settings-content-item.jw-settings-item-active,
+.jw-settings-menu .jw-icon.jw-button-color[aria-checked="true"] .jw-svg-icon {
+    fill: #2271B3 !important;
+    color: #2271B3!important;
+    background-color: transparent !important;
+}
+
+.jw-button-color {
+    -webkit-transition: opacity 0.25s,
+        -webkit-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1);
+    -o-transition: opacity 0.25s,
+        -o-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1);
+    -moz-transition: transform 0.25s cubic-bezier(0.5, 0, 0.1, 1), opacity 0.25s,
+        -moz-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1);
+    transition: transform 0.25s cubic-bezier(0.5, 0, 0.1, 1), opacity 0.25s,
+        -webkit-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1),
+        -moz-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1),
+        -o-transform 0.25s cubic-bezier(0.5, 0, 0.1, 1);
+    -webkit-transform: translateZ(0) scale(1);
+    -moz-transform: translateZ(0) scale(1);
+    transform: translateZ(0) scale(1);
+}
+
+.jw-button-color:hover {
+    -webkit-transform: translateZ(0) scale(1.2);
+    -moz-transform: translateZ(0) scale(1.2);
+    transform: translateZ(0) scale(1.2);
+}
+
+.jw-buffer {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.jw-slider-horizontal .jw-slider-container {
+    height: 0.5em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.jw-slider-vertical .jw-slider-container {
+    width: 0.4em !important;
+}
+
+.jw-volume-tip {
+    padding: 1em 0 !important;
+    background: #2271B3 !important;
+    border-radius: 0.3em;
+    max-width: 2.2em;
+    margin: 0 auto !important;
+}
+
+.jw-text-elapsed {
+    margin-right: 12px !important;
+}
+
+.jw-text-duration {
+    margin-left: 12px !important;
+}
+
+:not(.jw-breakpoint--1) .jw-text-duration:before,
+:not(.jw-breakpoint-0) .jw-text-duration:before {
+    display: none !important;
+}
+
+.jw-breakpoint-7 .jw-text-duration,
+.jw-breakpoint-7 .jw-text-elapsed {
+    font-size: 0.95em !important;
+}
+
+.jw-breakpoint-7 .jw-slider-time {
+    padding: 0 66px !important;
+}
+
+.jw-icon-volume .jw-svg-icon-volume-0,
+.jw-icon-volume .jw-svg-icon-volume-50,
+.jw-icon-volume .jw-svg-icon-volume-100 {
+    height: 28px;
+    width: 28px;
+}
+
+.jw-breakpoint-7 .jw-icon-volume .jw-svg-icon-volume-0,
+.jw-breakpoint-7 .jw-icon-volume .jw-svg-icon-volume-50,
+.jw-breakpoint-7 .jw-icon-volume .jw-svg-icon-volume-100 {
+    height: 32px !important;
+    width: 32px !important;
+}
+
+.jw-breakpoint-1:not(.jw-flag-audio-player) .jw-slider-time {
+    padding: 0 12px !important;
+}
+
+.jw-breakpoint--1:not(.jw-flag-audio-player) .jw-slider-time {
+    height: auto !important;
+    padding: 0 !important;
+}
+
+.jw-breakpoint--1:not(.jw-flag-audio-player) .jw-slider-time .jw-slider-container {
+    margin: 0 !important;
+}
+
+.jwplayer.jw-breakpoint-1:not(.jw-flag-ads):not(.jw-flag-audio-player) .jw-button-container,
+.jwplayer.jw-breakpoint--1:not(.jw-flag-ads):not(.jw-flag-audio-player) .jw-button-container {
+    padding: 0 !important;
+}
+
+.jw-flag-small-player:not(.jw-flag-audio-player):not(.jw-flag-ads) .jw-controlbar .jw-button-container>.jw-icon-playback {
+    display: flex !important;
+}
+
+.jwplayer.jw-breakpoint--1:not(.jw-flag-audio-player):not(.jw-flag-ads) .jw-controlbar .jw-button-container>.jw-icon-playback {
+    bottom: 6px !important;
+}
+
+.jw-breakpoint-1 .jw-icon[button="rewind"],
+.jw-breakpoint-1 .jw-icon[button="forward"],
+.jw-breakpoint--1 .jw-icon[button="rewind"],
+.jw-breakpoint--1 .jw-icon[button="forward"] {
+    display: none !important;
+}
 </style>
 </head>
-<body>
+<script src="https://content.jwplatform.com/libraries/KB5zFt7A.js"></script>
+<script type="text/javascript">jwplayer.key = "W7zSm81+mmIsg7F+fyHRKhF3ggLkTqtGMhvI92kbqf/ysE99";</script>
+<div id="player-container"></div>
+<script type="text/javascript">
+    function getParameterByName(name) {
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(window.location.href);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
 
-<div id="preloader">
-  <div class="preloader-content">
-    <img src="https://seeklogo.com/images/T/tv-logo-F7231DA292-seeklogo.com.png" alt="Logo" />
-    <div class="prog-bar-wrapper">
-      <div class="prog-bar-bg"></div><div class="prog-bar"></div>
-    </div>
-    <div class="preloader-extra">
-      <div class="spinner"><div></div></div>
-      <p>Cargando canales...</p>
-    </div>
-  </div>
-</div>
+    function decodeBase64(str) {
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
 
-<div class="container">
-  <div class="header">
-    <h1>Coronel TV</h1>
-    <p>IPTV + Pluto TV México</p>
-    <input type="text" id="search" placeholder="Buscar canal (ej: Alerta Cobra, ESPN, Pluto)">
-  </div>
+        function getParameterByName(name) {
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(window.location.href);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
 
-  <div class="player-wrap">
-    <video id="tvPlayer" controls autoplay playsinline></video>
-    <div class="controls">
-      <button id="restartBtn">Reiniciar</button>
-      <button id="fullscreenBtn">Pantalla Completa</button>
-    </div>
-    <div class="category-carousel" id="categoryCarousel"></div>
-  </div>
+    function decodeBase64(str) {
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+  
+   
 
-  <div class="matches" id="matchesList"></div>
-</div>
+    var videoUrl = getParameterByName('videoUrl');
+    var movieName = getParameterByName('movieName');
+    var imageUrl = getParameterByName('imageUrl');
 
-<script>
-// Preloader
-document.addEventListener("DOMContentLoaded", () => {
-  const preloader = document.getElementById("preloader");
-  const ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--preloader-time")) * 1000;
-  setTimeout(() => preloader.classList.add("hide"), ms);
+    if (videoUrl) {
+        videoUrl = decodeBase64(videoUrl);
+
+        if (movieName) {
+            movieName = decodeBase64(movieName);
+        }
+
+        if (imageUrl) {
+            imageUrl = decodeBase64(imageUrl);
+        }
+
+        var player = jwplayer("player-container");
+        player.setup({
+            title: movieName, // Set the title from the URL parameter
+            sources: [{
+                file: videoUrl,
+                type: "mp4",
+                label: "Video"
+            }],
+            width: "100vw",
+            height: "99vh",
+            stretching: "",
+            primary: "html5",
+            autostart: "false",
+            preload: "auto",
+            playbackRateControls: true,
+            image: imageUrl, // Set the image from the URL parameter
+            advertising: {
+                client: "vast",
+                tag: "https://raw.githubusercontent.com/Luis07019/blogdepelis/main/Reproductor/LDR.xml"
+            },
+            skin: {
+                name: "At-Canales"
+            },
+            logo: {
+                file: "https://i.ibb.co/FV3qJTN/Blog-de-Pelis-info.png"
+            },
+            captions: {
+                color: "#2271B3",
+                fontSize: 14,
+                backgroundOpacity: 0.5,
+                fontfamily: "Poppins",
+                edgeStyle: "raised"
+            },
+            tracks: [{
+                file: "",
+                label: "spa a2",
+                kind: "captions"
+            }]
+        });
+
+        // Ocultar elementos de carga después de un tiempo
+        setTimeout(function() {
+            $("#loader").delay(1000).fadeOut("slow");
+            $("#loader-wrapper").delay(1500).fadeOut("slow");
+        }, 2000);
+
+        // Manejo de errores del reproductor
+        player.on("setupError", function() {
+            swal("Server Error!", "Please contact us to fix it asap. Thank you!", "error");
+        });
+
+        player.on("error", function() {
+            swal("Server Error!", "Please contact us to fix it asap. Thank you!", "error");
+            
+        });
+      
+        // Activar pantalla completa cuando el reproductor está listo
+player.on("play", function() {
+    // Obtener el contenedor del reproductor
+    var container = player.getContainer();
+
+    // Comprobar si la API de Fullscreen está disponible
+    if (container) {
+        // Intentar entrar en pantalla completa de la manera más estándar posible
+        try {
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.mozRequestFullScreen) { // Firefox
+                container.mozRequestFullScreen();
+            } else if (container.webkitRequestFullscreen) { // Chrome, Safari y Opera
+                container.webkitRequestFullscreen();
+            } else if (container.msRequestFullscreen) { // IE/Edge
+                container.msRequestFullscreen();
+            } else {
+                console.error("La API de pantalla completa no está soportada en este navegador.");
+            }
+        } catch (err) {
+            console.error("Error al intentar activar pantalla completa:", err);
+        }
+    } else {
+        console.error("El contenedor del reproductor no está disponible.");
+    }
 });
 
-// Elementos
-const video = document.getElementById('tvPlayer');
-const matchesList = document.getElementById('matchesList');
-const searchInput = document.getElementById('search');
-const restartBtn = document.getElementById('restartBtn');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const categoryCarousel = document.getElementById('categoryCarousel');
-let currentUrl = "";
-let hls = null;
-let canales = [];
-let categorias = [];
-let currentCategory = "all";
 
-// === LISTAS M3U (2 fuentes) ===
-const m3uUrls = [
-  "https://iptv-org.github.io/iptv/index.m3u", // +8000 canales
-  "https://raw.githubusercontent.com/HelmerLuzo/PlutoTV_HL/4c9e648d2c2b070f43648ca5b231156f5858f019/tv/m3u/PlutoTV_tv_MX.m3u" // Pluto TV MX
-];
 
-// --- Parsear M3U
-function parseM3U(data, sourceName = "") {
-  let lines = data.split("\n");
-  let info = null;
-  let list = [];
-  lines.forEach(line => {
-    line = line.trim();
-    if (line.startsWith("#EXTINF")) {
-      let name = line.match(/,(.+)$/);
-      let logo = line.match(/tvg-logo="([^"]+)"/);
-      let group = line.match(/group-title="([^"]+)"/);
-      info = {
-        nombre: name ? name[1].trim() : "Canal",
-        logo: logo ? logo[1] : "https://via.placeholder.com/50x50/000/fff?text=TV",
-        grupo: group ? group[1] : "Otros",
-        url: "",
-        source: sourceName
-      };
-    } else if (line && !line.startsWith("#") && info) {
-      info.url = line;
-      list.push(info);
-      info = null;
+    } else {
+        alert('Solicite autorización para utilizar este Servidor');
     }
-  });
-  return list;
-}
-
-// --- Reproducir stream directo
-function playStream(url) {
-  currentUrl = url;
-  if (hls) hls.destroy();
-
-  if (Hls.isSupported() && url.includes('.m3u8')) {
-    hls = new Hls({ xhrSetup: (xhr) => { xhr.withCredentials = false; } });
-    hls.loadSource(url);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
-  } else if (video.canPlayType('application/vnd.apple.mpegurl') && url.includes('.m3u8')) {
-    video.src = url;
-    video.play().catch(() => {});
-  } else {
-    video.src = url;
-    video.play().catch(() => {});
-  }
-}
-
-// --- Renderizar canales
-function renderChannels() {
-  const filtro = searchInput.value.trim().toLowerCase();
-  matchesList.innerHTML = "";
-
-  let filtered = canales
-    .filter(c => {
-      if (filtro) return c.nombre.toLowerCase().includes(filtro);
-      return currentCategory === "all" || c.grupo === currentCategory;
-    })
-    .slice(0, 500);
-
-  if (filtered.length === 0) {
-    matchesList.innerHTML = '<div class="error">No se encontraron canales.</div>';
-    return;
-  }
-
-  filtered.forEach(canal => {
-    let div = document.createElement("div");
-    div.className = "match";
-    div.innerHTML = `
-      <div class="info">
-        <img src="${canal.logo}" alt="${canal.nombre}" onerror="this.src='https://via.placeholder.com/50x50/000/fff?text=TV'">
-        <div class="title">${canal.nombre} <span class="live">EN VIVO</span><span class="source">[${canal.source}]</span></div>
-      </div>
-      <button class="playBtn">Ver</button>
-    `;
-    div.querySelector(".playBtn").onclick = () => playStream(canal.url);
-    matchesList.appendChild(div);
-  });
-}
-
-// --- Botones
-restartBtn.onclick = () => currentUrl && playStream(currentUrl);
-fullscreenBtn.onclick = () => video.requestFullscreen?.() || video.webkitEnterFullscreen?.();
-
-// --- Búsqueda
-searchInput.addEventListener("input", renderChannels);
-
-// --- Categorías
-function renderCategories() {
-  categoryCarousel.innerHTML = "";
-  let allBtn = document.createElement("button");
-  allBtn.textContent = "Todas";
-  allBtn.className = "active";
-  allBtn.onclick = () => {
-    currentCategory = "all";
-    updateActive(allBtn);
-    renderChannels();
-  };
-  categoryCarousel.appendChild(allBtn);
-
-  // Priorizar Pluto TV
-  if (categorias.includes("Nuevo en Pluto TV")) {
-    addCategoryButton("Nuevo en Pluto TV");
-  }
-  if (categorias.includes("Pluto TV")) {
-    addCategoryButton("Pluto TV");
-  }
-
-  categorias
-    .filter(cat => cat !== "Nuevo en Pluto TV" && cat !== "Pluto TV")
-    .slice(0, 15)
-    .forEach(addCategoryButton);
-}
-
-function addCategoryButton(cat) {
-  let btn = document.createElement("button");
-  btn.textContent = cat;
-  btn.onclick = () => {
-    currentCategory = cat;
-    updateActive(btn);
-    renderChannels();
-  };
-  categoryCarousel.appendChild(btn);
-}
-
-function updateActive(activeBtn) {
-  Array.from(categoryCarousel.children).forEach(b => b.classList.remove("active"));
-  activeBtn.classList.add("active");
-}
-
-// --- Cargar listas
-Promise.all(m3uUrls.map((url, i) => 
-  fetch(url)
-    .then(r => r.ok ? r.text() : "")
-    .catch(() => "")
-))
-.then(datas => {
-  const sources = ["IPTV Global", "Pluto TV MX"];
-  datas.forEach((data, i) => {
-    if (data) {
-      let parsed = parseM3U(data, sources[i]);
-      canales = canales.concat(parsed);
-    }
-  });
-
-  // Eliminar duplicados por URL
-  const seen = new Set();
-  canales = canales.filter(c => c.url && !seen.has(c.url) ? (seen.add(c.url), true) : false);
-
-  categorias = [...new Set(canales.map(c => c.grupo))].sort();
-  renderCategories();
-  renderChannels();
-})
-.catch(() => {
-  matchesList.innerHTML = `<div class="error">Error al cargar listas. Revisa tu conexión.</div>`;
-});
 </script>
-
-</body>
 </html>
